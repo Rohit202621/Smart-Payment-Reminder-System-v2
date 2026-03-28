@@ -329,184 +329,180 @@ def generate_invoice_pdf(store_name, store_phone, customer_name, customer_phone,
                           purchase_date, total_amount, paid_amount,
                           pending_amount, transaction_id, upi_id=None):
     """
-    Generate invoice PDF matching the template style:
-    - Title: Smart Payment Reminder System (blue, centered, underlined)
-    - Table: Company | Invoice Details
-    - Bill To section
-    - Amount table (3 cols)
-    - Payment Status bar
-    - Footer with contact + QR code
-    - NO background colors except the status bar
+    Clean, Simple & Professional Invoice PDF - Final Version
     """
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            rightMargin=1.5*cm, leftMargin=1.5*cm,
-                            topMargin=1.5*cm, bottomMargin=1.5*cm)
+                            rightMargin=1.8*cm, leftMargin=1.8*cm,
+                            topMargin=1.8*cm, bottomMargin=1.8*cm)
+    
     styles = getSampleStyleSheet()
-    el = []
+    elements = []
 
-    # Colors from the template
-    TITLE_BLUE  = colors.HexColor("#31849B")   # title color from docx
-    HEADER_BLUE = colors.HexColor("#4472C4")   # table header blue
-    BLACK       = colors.HexColor("#000000")
-    DARK_GRAY   = colors.HexColor("#404040")
-    RED_COLOR   = colors.HexColor("#C00000")   # footer color from docx
-    WHITE       = colors.white
-    LIGHT_GRAY  = colors.HexColor("#F2F2F2")
-    GREEN_COLOR = colors.HexColor("#16a34a")
-    STATUS_RED  = colors.HexColor("#C00000")
-    STATUS_GREEN= colors.HexColor("#16a34a")
+    # Colors
+    PRIMARY_BLUE = colors.HexColor("#1e40af")
+    DARK_GRAY    = colors.HexColor("#1f2937")
+    LIGHT_GRAY   = colors.HexColor("#f8fafc")
+    BORDER_COLOR = colors.HexColor("#e2e8f0")
+    RED_COLOR    = colors.HexColor("#b91c1c")
 
     is_paid = pending_amount <= 0
-    sc = STATUS_GREEN if is_paid else STATUS_RED
-    st = "PAID" if is_paid else "PENDING"
+    status_text = "PAID" if is_paid else "PENDING"
+
     inv_no   = f"SPRS-{datetime.now().year}-{transaction_id:04d}"
-    inv_date = datetime.now().strftime("%d-%m-%Y")
-    due_date = (datetime.now() + timedelta(days=3)).strftime("%d-%m-%Y")
+    inv_date = datetime.now().strftime("%d %b %Y")
+    due_date = (datetime.now() + timedelta(days=3)).strftime("%d %b %Y")
 
-    # ── TITLE ──
-    title_style = ParagraphStyle("InvTitle", parent=styles["Normal"],
-                                  fontSize=16, fontName="Helvetica-Bold",
-                                  alignment=TA_CENTER, textColor=TITLE_BLUE,
-                                  spaceAfter=4,
-                                  underlineWidth=1, underlineColor=TITLE_BLUE)
-    el.append(Paragraph("<u>Smart Payment Reminder System</u>", title_style))
-    el.append(HRFlowable(width="100%", thickness=2, color=TITLE_BLUE, spaceAfter=8))
-
-    # ── HEADER TABLE: Company | Invoice Details ──
-    bdr = {"style": "LINEBELOW", "color": colors.HexColor("#CCCCCC")}
+    # ====================== HEADER ======================
     header_data = [[
-        Paragraph(f'<b>{store_name}</b><br/><font size="9" color="#555555">Phone: {store_phone}</font>',
-                  ParagraphStyle("THL", parent=styles["Normal"], fontSize=10, leading=14)),
-        Paragraph(
-            f'<b>Invoice No:</b> <font color="#4472C4"><b>{inv_no}</b></font><br/>'
-            f'<font size="9">Date: {inv_date}<br/>Due Date: {due_date}</font>',
-            ParagraphStyle("THR", parent=styles["Normal"], fontSize=10, alignment=TA_RIGHT, leading=14))
+        Paragraph(f"<b>{store_name}</b><br/><font size='9'>Phone: {store_phone}</font>",
+                  ParagraphStyle('StoreHeader', parent=styles['Normal'], fontSize=11, leading=14)),
+        
+        Paragraph(f"""
+            <b>Invoice No:</b> <font color='#1e40af'>{inv_no}</font><br/>
+            <b>Date:</b> {inv_date}<br/>
+            <b>Due Date:</b> {due_date}
+        """, ParagraphStyle('InvHeader', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT, leading=14))
     ]]
-    ht = Table(header_data, colWidths=[9*cm, 8*cm])
-    ht.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,-1), LIGHT_GRAY),
-        ("TOPPADDING", (0,0), (-1,-1), 8),("BOTTOMPADDING", (0,0), (-1,-1), 8),
-        ("LEFTPADDING", (0,0), (-1,-1), 10),("RIGHTPADDING", (0,0), (-1,-1), 10),
-        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#CCCCCC")),
-        ("LINEAFTER", (0,0), (0,-1), 0.5, colors.HexColor("#CCCCCC")),
+
+    header_table = Table(header_data, colWidths=[10*cm, 7*cm])
+    header_table.setStyle(TableStyle([
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 18),
+        ('LINEBELOW', (0, 0), (-1, -1), 1.5, PRIMARY_BLUE),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
-    el.append(ht)
-    el.append(Spacer(1, 0.3*cm))
+    elements.append(header_table)
+    elements.append(Spacer(1, 22))
 
-    # ── BILL TO ──
-    el.append(Paragraph("<b>Bill To:</b>",
-        ParagraphStyle("BT", parent=styles["Normal"], fontSize=11, spaceAfter=4)))
+    # ====================== BILL TO ======================
+    elements.append(Paragraph("<b>BILL TO</b>",
+        ParagraphStyle('BillToTitle', parent=styles['Normal'], fontSize=11,
+                       textColor=DARK_GRAY, spaceAfter=8)))
 
-    bill_rows = [
+    bill_data = [
         ["Customer Name", customer_name or "-"],
-        ["Email", customer_email or "-"],
         ["Phone", customer_phone or "-"],
+        ["Email", customer_email or "-"],
     ]
     if customer_address:
-        bill_rows.append(["Address", customer_address + (f" - {customer_pin}" if customer_pin else "")])
-    bill_rows.append(["Purchase Date", purchase_date])
+        addr = f"{customer_address} {customer_pin or ''}".strip()
+        bill_data.append(["Address", addr or "-"])
+    bill_data.append(["Purchase Date", purchase_date])
 
-    bt = Table(bill_rows, colWidths=[4*cm, 13*cm])
-    bt.setStyle(TableStyle([
-        ("FONTSIZE", (0,0), (-1,-1), 10),
-        ("TEXTCOLOR", (0,0), (0,-1), DARK_GRAY),
-        ("FONTNAME", (1,0), (1,-1), "Helvetica-Bold"),
-        ("ROWBACKGROUNDS", (0,0), (-1,-1), [WHITE, LIGHT_GRAY]),
-        ("TOPPADDING", (0,0), (-1,-1), 6),("BOTTOMPADDING", (0,0), (-1,-1), 6),
-        ("LEFTPADDING", (0,0), (-1,-1), 8),
-        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#CCCCCC")),
-        ("LINEBELOW", (0,0), (-1,-2), 0.3, colors.HexColor("#DDDDDD")),
+    bill_table = Table(bill_data, colWidths=[4.8*cm, 12.2*cm])
+    bill_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), DARK_GRAY),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_GRAY),
+        ('BOX', (0, 0), (-1, -1), 1, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('PADDING', (0, 0), (-1, -1), 9),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
-    el.append(bt)
-    el.append(Spacer(1, 0.3*cm))
+    elements.append(bill_table)
+    elements.append(Spacer(1, 25))
 
-    # ── AMOUNT TABLE ──
-    amt_header = [[
-        Paragraph("<font color='white'><b>Total Amount (&#8377;)</b></font>", ParagraphStyle("AH", parent=styles["Normal"], fontSize=10, alignment=TA_CENTER)),
-        Paragraph("<font color='white'><b>Paid Amount (&#8377;)</b></font>", ParagraphStyle("AH2", parent=styles["Normal"], fontSize=10, alignment=TA_CENTER)),
-        Paragraph("<font color='white'><b>Pending (&#8377;)</b></font>", ParagraphStyle("AH3", parent=styles["Normal"], fontSize=10, alignment=TA_CENTER)),
-    ]]
-    amt_vals = [[
-        Paragraph(f"<b>Rs. {total_amount:,.2f}</b>", ParagraphStyle("AV", parent=styles["Normal"], fontSize=12, alignment=TA_CENTER)),
-        Paragraph(f'<font color="#16a34a"><b>Rs. {paid_amount:,.2f}</b></font>', ParagraphStyle("AV2", parent=styles["Normal"], fontSize=12, alignment=TA_CENTER)),
-        Paragraph(f'<font color="{("#C00000" if not is_paid else "#16a34a")}"><b>Rs. {pending_amount:,.2f}</b></font>', ParagraphStyle("AV3", parent=styles["Normal"], fontSize=12, alignment=TA_CENTER)),
-    ]]
-    at = Table(amt_header + amt_vals, colWidths=[5.67*cm, 5.67*cm, 5.66*cm])
-    at.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), HEADER_BLUE),
-        ("BACKGROUND", (0,1), (-1,1), LIGHT_GRAY),
-        ("TOPPADDING", (0,0), (-1,-1), 10),("BOTTOMPADDING", (0,0), (-1,-1), 10),
-        ("ALIGN", (0,0), (-1,-1), "CENTER"),("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#CCCCCC")),
-        ("LINEAFTER", (0,0), (1,-1), 0.5, colors.HexColor("#CCCCCC")),
+    # ====================== AMOUNT TABLE (No Black Boxes, Proper ₹) ======================
+    amount_data = [
+        [
+            Paragraph("<b>Total Amount</b>", ParagraphStyle('AmtHeader', parent=styles['Normal'], alignment=TA_CENTER)),
+            Paragraph("<b>Paid Amount</b>", ParagraphStyle('AmtHeader', parent=styles['Normal'], alignment=TA_CENTER)),
+            Paragraph("<b>Pending Amount</b>", ParagraphStyle('AmtHeader', parent=styles['Normal'], alignment=TA_CENTER)),
+        ],
+        [
+            Paragraph(f"₹ {total_amount:,.2f}", ParagraphStyle('AmtValue', parent=styles['Normal'], fontSize=12.5, alignment=TA_CENTER)),
+            Paragraph(f"₹ {paid_amount:,.2f}", ParagraphStyle('AmtValue', parent=styles['Normal'], fontSize=12.5, alignment=TA_CENTER)),
+            Paragraph(f"₹ {pending_amount:,.2f}", ParagraphStyle('AmtValue', parent=styles['Normal'], fontSize=12.5, alignment=TA_CENTER)),
+        ]
+    ]
+
+    amount_table = Table(amount_data, colWidths=[5.9*cm, 5.9*cm, 5.9*cm])
+    amount_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), PRIMARY_BLUE),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 10.5),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 11),
+        ('TOPPADDING', (0, 0), (-1, 0), 11),
+        ('BACKGROUND', (0, 1), (-1, 1), LIGHT_GRAY),
+        ('BOX', (0, 0), (-1, -1), 1, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
-    el.append(at)
-    el.append(Spacer(1, 0.3*cm))
+    elements.append(amount_table)
+    elements.append(Spacer(1, 22))
 
-    # ── PAYMENT STATUS BAR ──
-    sb = Table([[Paragraph(f'<font color="white"><b>Payment Status: {st}</b></font>',
-        ParagraphStyle("SB", parent=styles["Normal"], fontSize=12, alignment=TA_CENTER))]], colWidths=[17*cm])
-    sb.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,-1), sc),
-        ("TOPPADDING", (0,0), (-1,-1), 10),("BOTTOMPADDING", (0,0), (-1,-1), 10),
+    # ====================== PAYMENT STATUS (Compact) ======================
+    status_style = ParagraphStyle('Status', parent=styles['Normal'],
+                                  fontSize=12.5, alignment=TA_CENTER,
+                                  textColor=colors.white, fontName="Helvetica-Bold")
+   
+    status_table = Table([[Paragraph(f"PAYMENT STATUS : {status_text}", status_style)]],
+                         colWidths=[16*cm])
+   
+    status_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), RED_COLOR if not is_paid else colors.HexColor("#15803d")),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('BOX', (0, 0), (-1, -1), 1, BORDER_COLOR),
     ]))
-    el.append(sb)
-    el.append(Spacer(1, 0.4*cm))
-    el.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC")))
-    el.append(Spacer(1, 0.2*cm))
+    elements.append(status_table)
+    elements.append(Spacer(1, 30))
 
-    # ── FOOTER: Contact + QR ──
-    contact_text = (
-        f'<font color="#C00000">For Any Queries Contact: <b>{store_name}</b></font><br/>'
-        f'<font color="#C00000">Phone No: <b>{store_phone}</b></font>'
-    )
-
-    if upi_id:
-        # Generate QR for pending amount
-        qr_bytes = generate_upi_qr(upi_id, pending_amount if not is_paid else 0, store_name)
-        if qr_bytes:
-            qr_img = RLImage(BytesIO(qr_bytes), width=3*cm, height=3*cm)
-            qr_note = Paragraph(
-                f'<font size="8" color="#404040">Scan to Pay (UPI)<br/>{upi_id}<br/>'
-                f'<b>Amount: Rs. {pending_amount:,.2f}</b><br/>'
-                f'(You can change amount before paying)</font>',
-                ParagraphStyle("QN", parent=styles["Normal"], fontSize=8, alignment=TA_CENTER)
-            )
-            footer_data = [[
-                Paragraph(contact_text, ParagraphStyle("FC", parent=styles["Normal"], fontSize=10, leading=16)),
-                [qr_img, qr_note]
-            ]]
-            ft = Table(footer_data, colWidths=[11*cm, 6*cm])
-            ft.setStyle(TableStyle([
-                ("VALIGN", (0,0), (-1,-1), "TOP"),
-                ("LEFTPADDING", (0,0), (-1,-1), 0),
-                ("RIGHTPADDING", (0,0), (-1,-1), 0),
-            ]))
-            el.append(ft)
-        else:
-            el.append(Paragraph(contact_text, ParagraphStyle("FC", parent=styles["Normal"], fontSize=10, leading=16)))
-    else:
-        el.append(Paragraph(contact_text, ParagraphStyle("FC", parent=styles["Normal"], fontSize=10, leading=16)))
-
-    el.append(Spacer(1, 0.3*cm))
-
-    # ── QR NOTE ──
+    # ====================== FOOTER WITH QR CODE ======================
     if upi_id and not is_paid:
-        el.append(Paragraph(
-            '<font size="9" color="#404040"><b>NOTE:</b> If you pay through QR code, '
-            'please contact the store after payment to confirm. Thank you!</font>',
-            ParagraphStyle("QN2", parent=styles["Normal"], fontSize=9, spaceAfter=4)
-        ))
+        qr_bytes = generate_upi_qr(upi_id, pending_amount, store_name)
+        if qr_bytes:
+            qr_img = RLImage(BytesIO(qr_bytes), width=4.2*cm, height=4.2*cm)
+           
+            footer_data = [[
+                Paragraph(f"""
+                    <b>For any queries contact:</b><br/>
+                    <b>{store_name}</b><br/>
+                    Phone: {store_phone}
+                """, ParagraphStyle('FooterText', parent=styles['Normal'], fontSize=10, leading=16)),
+               
+                [qr_img, Paragraph(f"""
+                    <font size="9"><b>Scan to Pay via UPI</b><br/>
+                    {upi_id}<br/>
+                    Amount: ₹ {pending_amount:,.2f}</font>
+                """, ParagraphStyle('QRNote', parent=styles['Normal'], alignment=TA_CENTER, fontSize=9, leading=13))]
+            ]]
+           
+            footer_table = Table(footer_data, colWidths=[10.5*cm, 7.5*cm])
+            footer_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ]))
+            elements.append(footer_table)
+           
+            elements.append(Spacer(1, 15))
+            
+            # Red Note
+            elements.append(Paragraph(
+                "<b>NOTE:</b> If you pay through QR code, please contact the store after payment for confirmation.",
+                ParagraphStyle('Note', parent=styles['Normal'], fontSize=11, textColor=RED_COLOR, fontName="Helvetica-Bold")
+            ))
+        else:
+            elements.append(Paragraph(f"""
+                <b>For any queries contact:</b> {store_name} | Phone: {store_phone}
+            """, ParagraphStyle('FooterText', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER)))
+    else:
+        elements.append(Paragraph(f"""
+            <b>For any queries contact:</b> {store_name} | Phone: {store_phone}
+        """, ParagraphStyle('FooterText', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER)))
 
-    # ── BOTTOM META ──
-    el.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC")))
-    el.append(Spacer(1, 0.1*cm))
-    el.append(Paragraph(
-        f'<font size="8" color="#888888">Invoice No: {inv_no} | Generated: {datetime.now().strftime("%d %b %Y %H:%M")} | Tx: #{transaction_id:05d} | SPRS</font>',
-        ParagraphStyle("META", parent=styles["Normal"], alignment=TA_CENTER, fontSize=8)))
+    # ====================== META FOOTER ======================
+    elements.append(Spacer(1, 45))
+    elements.append(HRFlowable(width="100%", thickness=0.6, color=BORDER_COLOR))
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph(
+        f"Invoice #{inv_no} • Generated on {datetime.now().strftime('%d %b %Y %H:%M')} • Smart Payment Reminder System",
+        ParagraphStyle('Meta', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8.5, textColor=colors.grey)
+    ))
 
-    doc.build(el)
+    doc.build(elements)
     return buffer.getvalue()
 
 def get_payment_insights(uid):
