@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Add Transaction{% endblock %}
+
+{% block content %}
+<div class="card">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Add Transaction</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Create a transaction entry to calculate pending amounts automatically.</p>
+    </div>
+    <a class="btn" href="{{ url_for('transactions') }}">← Back</a>
+  </div>
+
+  {% if customers|length == 0 %}
+    <p class="muted" style="margin-top:14px;">No customers found. Please add a customer first.</p>
+    <a class="btn" href="{{ url_for('add_customer') }}">+ Add Customer</a>
+  {% else %}
+
+  <form method="POST" autocomplete="off" style="margin-top:16px;">
+
+    <!-- Customer Search -->
+    <label style="margin-bottom:10px; display:block;">Select Customer <span style="color:#ef4444;">*</span></label>
+    <div style="position:relative; margin-bottom:4px;">
+      <input
+        type="text"
+        id="customerSearch"
+        placeholder="🔍 Type name or phone to search customer..."
+        autocomplete="off"
+        style="margin:0; padding-right:40px;"
+        oninput="filterCustomers()"
+        onfocus="showDropdown()"
+      >
+      <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#818cf8; font-size:13px; pointer-events:none;">▼</span>
+    </div>
+
+    <!-- Hidden actual value -->
+    <input type="hidden" name="customer_id" id="selectedCustomerId" required>
+
+    <!-- Selected customer display -->
+    <div id="selectedCustomerDisplay" style="display:none; margin-bottom:10px; padding:10px 14px; background:rgba(79,70,229,0.1); border:1px solid rgba(79,70,229,0.3); border-radius:10px;">
+      <span style="font-size:13px; color:#818cf8; font-weight:600;" id="selectedCustomerName"></span>
+      <span class="muted" style="font-size:12px; margin-left:8px;" id="selectedCustomerPhone"></span>
+      <button type="button" onclick="clearSelection()" style="float:right; background:none; border:none; color:#f87171; cursor:pointer; font-size:13px; padding:0; width:auto; margin:0;">✕ Clear</button>
+    </div>
+
+    <!-- Dropdown list -->
+    <div id="customerDropdown" style="
+      display:none; position:absolute; z-index:999;
+      background:#1e1e2e; border:1px solid rgba(255,255,255,0.12);
+      border-radius:10px; max-height:260px; overflow-y:auto;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);
+      min-width:300px; max-width:600px;
+    ">
+      {% for c in customers %}
+      <div class="customer-option" onclick="selectCustomer('{{ c.id }}','{{ c.name|replace("'","\\'")|replace('"','\\"') }}','{{ c.phone or "" }}')"
+        data-name="{{ c.name|lower }}" data-phone="{{ c.phone or '' }}"
+        style="padding:10px 16px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:12px;"
+        onmouseover="this.style.background='rgba(79,70,229,0.15)'"
+        onmouseout="this.style.background='transparent'">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#2563eb);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;flex-shrink:0;">{{ c.name[0].upper() }}</div>
+        <div>
+          <p style="margin:0;font-size:13px;font-weight:600;">{{ c.name }}</p>
+          <p class="muted" style="margin:0;font-size:11px;">{{ c.phone or 'No phone' }} &nbsp;|&nbsp; {{ c.email or 'No email' }}</p>
+        </div>
+      </div>
+      {% endfor %}
+      <div id="noResults" style="display:none; padding:14px 16px; text-align:center; color:#64748b; font-size:13px;">No customers found</div>
+    </div>
+
+    <label style="margin-top:16px;">Purchase Date</label>
+    <input id="purchase_date" type="date" name="purchase_date" required>
+
+    <label style="margin-top:14px;">Total Amount (₹)</label>
+    <input type="number" min="0" step="0.01" name="total_amount" required placeholder="Eg: 5000" id="totalAmt" oninput="calcPending()">
+
+    <label style="margin-top:14px;">Paid Amount (₹)</label>
+    <input type="number" min="0" step="0.01" name="paid_amount" value="0" placeholder="Eg: 2000" id="paidAmt" oninput="calcPending()">
+
+    <!-- Live pending preview -->
+    <div id="pendingPreview" style="display:none; margin-top:10px; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
+      <span class="muted" style="font-size:12px;">Pending amount: </span>
+      <span id="pendingAmt" style="font-weight:700; font-size:14px; color:#f87171;"></span>
+      <span id="paidStatus" style="float:right; font-size:12px; font-weight:700;"></span>
+    </div>
+
+    <button type="submit" style="margin-top:20px;">Save Transaction</button>
+  </form>
+
+  {% endif %}
+</div>
+
+<script>
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('customerDropdown');
+  const search = document.getElementById('customerSearch');
+  if (dd && !dd.contains(e.target) && e.target !== search) {
+    dd.style.display = 'none';
+  }
+});
+
+function showDropdown() {
+  document.getElementById('customerDropdown').style.display = 'block';
+}
+
+function filterCustomers() {
+  const q = document.getElementById('customerSearch').value.toLowerCase().trim();
+  const options = document.querySelectorAll('.customer-option');
+  const dd = document.getElementById('customerDropdown');
+  const noResults = document.getElementById('noResults');
+  dd.style.display = 'block';
+  let visible = 0;
+  options.forEach(opt => {
+    const name = opt.dataset.name || '';
+    const phone = opt.dataset.phone || '';
+    if (!q || name.includes(q) || phone.includes(q)) {
+      opt.style.display = 'flex';
+      visible++;
+    } else {
+      opt.style.display = 'none';
+    }
+  });
+  noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function selectCustomer(id, name, phone) {
+  document.getElementById('selectedCustomerId').value = id;
+  document.getElementById('customerSearch').value = name;
+  document.getElementById('customerDropdown').style.display = 'none';
+  document.getElementById('selectedCustomerDisplay').style.display = 'block';
+  document.getElementById('selectedCustomerName').textContent = name;
+  document.getElementById('selectedCustomerPhone').textContent = phone ? '📞 ' + phone : '';
+}
+
+function clearSelection() {
+  document.getElementById('selectedCustomerId').value = '';
+  document.getElementById('customerSearch').value = '';
+  document.getElementById('selectedCustomerDisplay').style.display = 'none';
+}
+
+function calcPending() {
+  const total = parseFloat(document.getElementById('totalAmt').value) || 0;
+  const paid = parseFloat(document.getElementById('paidAmt').value) || 0;
+  const pending = Math.max(0, total - paid);
+  const preview = document.getElementById('pendingPreview');
+  if (total > 0) {
+    preview.style.display = 'block';
+    document.getElementById('pendingAmt').textContent = '₹' + pending.toFixed(2);
+    const status = document.getElementById('paidStatus');
+    if (pending <= 0) {
+      status.textContent = '✅ PAID';
+      status.style.color = '#4ade80';
+      document.getElementById('pendingAmt').style.color = '#4ade80';
+    } else {
+      status.textContent = '⏳ PENDING';
+      status.style.color = '#facc15';
+      document.getElementById('pendingAmt').style.color = '#f87171';
+    }
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('purchase_date');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+});
+</script>
+{% endblock %}

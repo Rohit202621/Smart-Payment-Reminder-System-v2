@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Update Payment{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Update Payment</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Enter the new amount received. It will be added to the existing paid amount.</p>
+    </div>
+    <a class="btn" href="{{ url_for('transactions') }}">← Back</a>
+  </div>
+
+  <div class="grid" style="margin-top:14px;">
+    <div class="mini-card">
+      <h3>{{ t.customer_name }}</h3>
+      <p>Customer</p>
+    </div>
+    <div class="mini-card">
+      <h3>Rs.{{ t.total_amount }}</h3>
+      <p>Total Amount</p>
+    </div>
+    <div class="mini-card">
+      <h3>Rs.{{ t.paid_amount }}</h3>
+      <p>Already Paid</p>
+    </div>
+    <div class="mini-card">
+      <h3 id="pendingPreview">Rs.{{ t.pending_amount }}</h3>
+      <p id="statusPreview">{% if t.status == "PAID" %}PAID{% else %}PENDING{% endif %}</p>
+    </div>
+  </div>
+
+  <form method="POST" autocomplete="off" style="margin-top:18px;">
+    <label>Additional Payment Received (Rs.)</label>
+    <input
+      id="addInput"
+      type="number"
+      min="0"
+      step="0.01"
+      name="additional_payment"
+      required
+      value="0"
+      placeholder="Enter new amount received from customer"
+    >
+    <p class="muted" style="margin-top:-6px;">
+      Already paid: Rs.{{ t.paid_amount }} | Total: Rs.{{ t.total_amount }}<br>
+      &nbsp;
+    </p>
+    <button type="submit">Update Payment</button>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const addInput = document.getElementById("addInput");
+  const pendingPreview = document.getElementById("pendingPreview");
+  const statusPreview = document.getElementById("statusPreview");
+  const total = parseFloat("{{ t.total_amount }}") || 0;
+  const alreadyPaid = parseFloat("{{ t.paid_amount }}") || 0;
+
+  function updatePreview(){
+    const additional = parseFloat(addInput.value || 0);
+    let newPaid = alreadyPaid + additional;
+    if(newPaid > total) newPaid = total;
+    let pending = total - newPaid;
+    if(pending < 0) pending = 0;
+    pendingPreview.textContent = "Rs." + pending.toFixed(2);
+    statusPreview.textContent = pending <= 0 ? "PAID" : "PENDING";
+  }
+
+  addInput.addEventListener("input", updatePreview);
+  updatePreview();
+});
+</script>
+{% endblock %}

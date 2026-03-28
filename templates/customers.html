@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<div class="card">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Customers</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Manage your customer records securely.</p>
+    </div>
+    <a class="btn" href="{{ url_for('add_customer') }}">+ Add Customer</a>
+  </div>
+
+  <form method="GET" action="{{ url_for('customers') }}" style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:220px;">
+      <input type="text" name="q" placeholder="Search by name / phone / email..." value="{{ q or '' }}" style="margin:0;">
+    </div>
+    <button type="submit" style="width:auto; margin:0;">Search</button>
+    {% if q %}
+      <a class="btn" href="{{ url_for('customers') }}" style="margin:0;">Clear</a>
+    {% endif %}
+  </form>
+
+  {% if customers|length == 0 %}
+    <div style="text-align:center; padding:40px 20px;">
+      <p style="font-size:2rem; margin:0;">👥</p>
+      <p class="muted" style="margin:8px 0 0 0;">No customers found. Add customer to get started.</p>
+    </div>
+  {% else %}
+
+  <div style="margin-top:20px; display:flex; flex-direction:column; gap:12px;">
+    {% for c in customers %}
+    <div style="
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    ">
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; flex:1;">
+        <div style="
+          width: 42px; height: 42px; border-radius: 50%;
+          background: linear-gradient(135deg, #4f46e5, #2563eb);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; font-weight: 900; color: white; flex-shrink: 0;
+        ">{{ c.name[0].upper() }}</div>
+        <div>
+          <p style="margin:0; font-weight:700; font-size:14px;">{{ c.name }}</p>
+          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:3px;">
+            <span class="muted" style="font-size:12px;">📞 {{ c.phone or "No phone" }}</span>
+            <span class="muted" style="font-size:12px;">✉️ {{ c.email or "No email" }}</span>
+            {% if c.address %}<span class="muted" style="font-size:12px;">📍 {{ c.address }}{% if c.pin %} - {{ c.pin }}{% endif %}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <a href="{{ url_for('edit_customer', cid=c.id) }}" style="
+          padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+          background: rgba(79,70,229,0.15); color: #818cf8;
+          border: 1px solid rgba(79,70,229,0.3); text-decoration: none;">✏️ Edit</a>
+        <a href="{{ url_for('delete_customer', cid=c.id) }}"
+           onclick="return confirm('Delete {{ c.name }}? This cannot be undone.')"
+           style="
+             padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+             background: rgba(239,68,68,0.12); color: #f87171;
+             border: 1px solid rgba(239,68,68,0.25); text-decoration: none;">🗑️ Delete</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="muted" style="margin-top:14px; font-size:12px; text-align:right;">
+    {{ customers|length }} customer{{ 's' if customers|length != 1 else '' }} found
+  </p>
+  {% endif %}
+
+</div>
+{% endblock %}

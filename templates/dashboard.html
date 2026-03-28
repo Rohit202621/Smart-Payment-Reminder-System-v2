@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      {% if profile_pic %}
+        <img src="{{ url_for('static', filename='uploads/' ~ profile_pic) }}"
+             style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.2);">
+      {% else %}
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#2563eb);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:white;">
+          {{ username[0]|upper }}
+        </div>
+      {% endif %}
+      <div>
+        <h2 style="margin:0;">Welcome, {{ username }} 🗿</h2>
+        <p class="muted" style="margin:4px 0 0 0;">Smart Payment Reminder System — secure payment tracking & reminders.</p>
+        <p class="muted" style="margin:2px 0 0 0;font-size:12px;">AI Model: <b>{{ gemini_status }}</b></p>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn" href="{{ url_for('customers') }}">Customers</a>
+      <a class="btn" href="{{ url_for('transactions') }}">Transactions</a>
+      <a class="btn" href="{{ url_for('audit_logs') }}">Audit Logs</a>
+      <a class="btn" href="{{ url_for('profile') }}">Profile</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="mini-card">
+      <h3>{{ total_customers }}</h3>
+      <p>Total Customers</p>
+    </div>
+    <div class="mini-card">
+      <h3>{{ total_transactions }}</h3>
+      <p>Total Transactions</p>
+    </div>
+    <div class="mini-card">
+      <h3>{{ total_pending_tx }}</h3>
+      <p>Pending Transactions</p>
+    </div>
+    <div class="mini-card">
+      <h3>Rs.{{ pending_sum or 0 }}</h3>
+      <p>Total Pending Amount</p>
+    </div>
+    <div class="mini-card">
+      <h3>{{ total_reminders }}</h3>
+      <p>Total Reminders Saved</p>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Chart -->
+<div class="card" style="margin-top:18px;">
+  <h2 style="margin:0 0 6px 0;">Monthly Payment Overview</h2>
+  <p class="muted" style="margin:0 0 14px 0;">Paid vs Pending amounts by month.</p>
+  <canvas id="paymentChart" style="max-height:320px;"></canvas>
+</div>
+
+<!-- Customer Insights -->
+{% if insights %}
+<div class="card" style="margin-top:18px;">
+  <h2 style="margin:0 0 4px 0;">Smart Customer Insights</h2>
+  <p class="muted" style="margin:0 0 14px 0;">Payment health score and behavior analysis.</p>
+  {% for ins in insights %}
+  <div class="insight-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <b style="font-size:15px;">{{ ins.name }}</b>
+        <span style="font-size:13px;">{{ ins.tag }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span class="muted" style="font-size:12px;">
+          {{ ins.tx_count }} tx &nbsp;|&nbsp; Avg Pending: Rs.{{ ins.avg_pending }}
+          &nbsp;|&nbsp; Total Biz: Rs.{{ ins.total_biz }}
+        </span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="muted" style="font-size:11px;">Score</span>
+          <div style="width:80px;height:8px;background:rgba(255,255,255,0.12);border-radius:999px;overflow:hidden;">
+            <div style="width:{{ ins.score }}%;height:100%;border-radius:999px;
+              background:{% if ins.score >= 80 %}#22c55e{% elif ins.score >= 60 %}#84cc16{% elif ins.score >= 40 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+          </div>
+          <span style="font-size:11px;font-weight:900;">{{ ins.score }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const chartData = {{ chart_data|safe }};
+const ctx = document.getElementById("paymentChart").getContext("2d");
+new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: chartData.labels.length ? chartData.labels : ["No Data"],
+    datasets: [
+      {
+        label: "Paid (Rs.)",
+        data: chartData.paid.length ? chartData.paid : [0],
+        backgroundColor: "rgba(34,197,94,0.7)",
+        borderColor: "rgba(34,197,94,1)",
+        borderWidth: 1,
+        borderRadius: 6,
+      },
+      {
+        label: "Pending (Rs.)",
+        data: chartData.pending.length ? chartData.pending : [0],
+        backgroundColor: "rgba(239,68,68,0.7)",
+        borderColor: "rgba(239,68,68,1)",
+        borderWidth: 1,
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: "rgba(255,255,255,0.85)", font: { size: 13 } } },
+      tooltip: { callbacks: { label: ctx => " Rs." + ctx.raw.toLocaleString() } }
+    },
+    scales: {
+      x: { ticks: { color: "rgba(255,255,255,0.7)" }, grid: { color: "rgba(255,255,255,0.06)" } },
+      y: { ticks: { color: "rgba(255,255,255,0.7)", callback: v => "Rs."+v }, grid: { color: "rgba(255,255,255,0.06)" } }
+    }
+  }
+});
+</script>
+{% endblock %}

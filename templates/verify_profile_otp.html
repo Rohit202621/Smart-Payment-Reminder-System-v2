@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <h2>Verify OTP</h2>
+
+    {% if action == "change_password" %}
+    <p class="muted">
+      Enter the OTP sent to your registered email to change your password.
+    </p>
+    {% else %}
+    <p class="muted">
+      Enter the OTP sent to your registered email to update your profile.
+    </p>
+    {% endif %}
+
+    <form method="POST" autocomplete="off">
+      <label>Enter OTP</label>
+      <input
+        id="otp"
+        type="text"
+        name="otp"
+        required
+        maxlength="6"
+        inputmode="numeric"
+        placeholder="Enter 6-digit OTP"
+        autofocus
+        style="text-align:center; letter-spacing:6px; font-weight:900;"
+      >
+      <p class="muted" style="margin:-6px 0 12px 0;">OTP is valid for <b>5 minutes</b>.</p>
+      <button type="submit">Verify OTP</button>
+    </form>
+
+    <div class="auth-footer" style="margin-top:18px;">
+      <a href="{{ url_for('profile') }}">← Back to Profile</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const otp = document.getElementById("otp");
+  if(otp) otp.addEventListener("input", () => {
+    otp.value = otp.value.replace(/[^0-9]/g, "").slice(0, 6);
+  });
+});
+</script>
+{% endblock %}

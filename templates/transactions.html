@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
+{% block content %}
+<div class="card">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Transactions</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Track paid vs pending amounts, and generate reminders securely.</p>
+    </div>
+    <a class="btn" href="{{ url_for('add_transaction') }}">+ Add Transaction</a>
+  </div>
+
+  <!-- Search bar for transactions -->
+  <form method="GET" action="{{ url_for('transactions') }}" style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:220px;">
+      <input type="text" name="q" placeholder="🔍 Search by customer name..." value="{{ q or '' }}" style="margin:0;">
+    </div>
+    <button type="submit" style="width:auto; margin:0;">Search</button>
+    {% if q %}
+      <a class="btn" href="{{ url_for('transactions') }}" style="margin:0;">Clear</a>
+    {% endif %}
+  </form>
+
+  {% if transactions|length == 0 %}
+    <div style="text-align:center; padding:40px 20px;">
+      <p style="font-size:2rem; margin:0;">🧾</p>
+      <p class="muted" style="margin:8px 0 0 0;">There are no transactions yet 🔍</p>
+    </div>
+  {% else %}
+
+  <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
+    {% for t in transactions %}
+    <div style="
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 18px;
+    ">
+      <!-- Top Row -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="
+            width:36px; height:36px; border-radius:50%;
+            background:linear-gradient(135deg,#4f46e5,#2563eb);
+            display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:900; color:white; flex-shrink:0;
+          ">{{ t.customer_name[0].upper() }}</div>
+          <div>
+            <p style="margin:0; font-weight:700; font-size:14px;">{{ t.customer_name }}</p>
+            <p class="muted" style="margin:1px 0 0 0; font-size:11px;">📅 {{ t.purchase_date }}</p>
+          </div>
+        </div>
+        {% if t.status == "PAID" %}
+          <span style="font-size:11px; font-weight:800; padding:3px 12px; border-radius:50px; background:rgba(22,163,74,0.15); color:#4ade80; border:1px solid rgba(22,163,74,0.3);">✅ PAID</span>
+        {% else %}
+          <span style="font-size:11px; font-weight:800; padding:3px 12px; border-radius:50px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3);">⏳ PENDING</span>
+        {% endif %}
+      </div>
+
+      <!-- Amount Row -->
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; background:rgba(255,255,255,0.03); border-radius:8px; padding:10px 14px; margin-bottom:10px;">
+        <div style="text-align:center;">
+          <p class="muted" style="margin:0; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;">Total</p>
+          <p style="margin:3px 0 0 0; font-size:14px; font-weight:800;">₹{{ "%.0f"|format(t.total_amount) }}</p>
+        </div>
+        <div style="text-align:center; border-left:1px solid rgba(255,255,255,0.07); border-right:1px solid rgba(255,255,255,0.07);">
+          <p class="muted" style="margin:0; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;">Paid</p>
+          <p style="margin:3px 0 0 0; font-size:14px; font-weight:800; color:#4ade80;">₹{{ "%.0f"|format(t.paid_amount) }}</p>
+        </div>
+        <div style="text-align:center;">
+          <p class="muted" style="margin:0; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;">Pending</p>
+          <p style="margin:3px 0 0 0; font-size:14px; font-weight:800; color:{% if t.pending_amount > 0 %}#f87171{% else %}#4ade80{% endif %};">₹{{ "%.0f"|format(t.pending_amount) }}</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex; gap:7px; flex-wrap:wrap; align-items:center;">
+        {% if t.status == "PENDING" %}
+          <a href="{{ url_for('reminder', tid=t.id) }}" style="padding:6px 12px; border-radius:7px; font-size:11px; font-weight:700; background:rgba(79,70,229,0.2); color:#a5b4fc; border:1px solid rgba(79,70,229,0.35); text-decoration:none;">🔔 Reminder</a>
+        {% endif %}
+        <a href="{{ url_for('download_invoice', tid=t.id) }}" style="padding:6px 12px; border-radius:7px; font-size:11px; font-weight:700; background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.25); text-decoration:none;">📄 Invoice PDF</a>
+        <a href="{{ url_for('update_payment', tid=t.id) }}" style="padding:6px 12px; border-radius:7px; font-size:11px; font-weight:700; background:rgba(234,179,8,0.12); color:#fde047; border:1px solid rgba(234,179,8,0.25); text-decoration:none;">💳 Update Payment</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="muted" style="margin-top:12px; font-size:12px; text-align:right;">
+    {{ transactions|length }} transaction{{ 's' if transactions|length != 1 else '' }} found
+  </p>
+
+  {% endif %}
+</div>
+{% endblock %}

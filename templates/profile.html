@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Profile ☠️</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Manage your account information securely.</p>
+    </div>
+    <a class="btn" href="{{ url_for('dashboard') }}">← Back</a>
+  </div>
+
+  <div style="margin-top:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    {% if u.profile_pic %}
+      <img src="{{ url_for('static', filename='uploads/' ~ u.profile_pic) }}"
+           style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid rgba(79,70,229,0.5);">
+    {% else %}
+      <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#2563eb);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:white;">
+        {{ u.username[0]|upper }}
+      </div>
+    {% endif %}
+    <div>
+      <p style="margin:0;font-size:18px;font-weight:900;">{{ u.username }}</p>
+      <p class="muted" style="margin:4px 0 0 0;">{{ u.store_name }}</p>
+      <form method="POST" action="{{ url_for('upload_profile_pic') }}" enctype="multipart/form-data"
+            style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="file" name="profile_pic" accept="image/*" style="width:auto;padding:6px 10px;font-size:13px;margin:0;">
+        <button type="submit" style="width:auto;padding:8px 14px;font-size:13px;">Upload DP</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:20px;">
+    <div class="mini-card">
+      <p class="muted" style="margin:0;font-size:11px;">USERNAME</p>
+      <h3 style="font-size:15px;margin-top:6px;">{{ u.username }}</h3>
+    </div>
+    <div class="mini-card">
+      <p class="muted" style="margin:0;font-size:11px;">EMAIL</p>
+      <h3 style="font-size:14px;margin-top:6px;word-break:break-all;">{{ u.email }}</h3>
+    </div>
+    <div class="mini-card">
+      <p class="muted" style="margin:0;font-size:11px;">PHONE</p>
+      <h3 style="font-size:15px;margin-top:6px;">{{ u.phone }}</h3>
+    </div>
+    <div class="mini-card">
+      <p class="muted" style="margin:0;font-size:11px;">STORE NAME</p>
+      <h3 style="font-size:15px;margin-top:6px;">{{ u.store_name }}</h3>
+    </div>
+    <div class="mini-card">
+      <p class="muted" style="margin:0;font-size:11px;">MEMBER SINCE</p>
+      <h3 style="font-size:14px;margin-top:6px;">{{ u.created_at[:10] }}</h3>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+    <form method="POST" action="{{ url_for('profile_request_otp') }}" style="display:inline;">
+      <input type="hidden" name="action" value="update">
+      <button type="submit" style="width:auto;padding:12px 24px;border-radius:16px;font-size:15px;font-weight:900;">Update Profile Info</button>
+    </form>
+    <form method="POST" action="{{ url_for('profile_request_otp') }}" style="display:inline;">
+      <input type="hidden" name="action" value="change_password">
+      <button type="submit" style="width:auto;padding:12px 24px;border-radius:16px;font-size:15px;font-weight:900;background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 14px 30px rgba(220,38,38,0.20);">Change Password</button>
+    </form>
+  </div>
+  <p class="muted" style="margin-top:12px;font-size:13px;">An OTP will be sent to your registered email <b>{{ u.email }}</b> before any changes.</p>
+</div>
+{% endblock %}

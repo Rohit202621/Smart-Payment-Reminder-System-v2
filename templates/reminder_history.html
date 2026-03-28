@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Reminder History{% endblock %}
+
+{% block content %}
+<div class="card">
+
+  <!-- ✅ Header -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Reminder History</h2>
+      <p class="muted" style="margin:8px 0 0 0;">
+        View all saved reminders for this transaction.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a class="btn" href="{{ url_for('transactions') }}">← Back</a>
+      {% set reminder_count = reminders|length %}
+      {% if reminder_count < 5 %}
+        <a class="btn" href="{{ url_for('reminder', tid=t.id) }}">Generate New</a>
+      {% else %}
+        <span class="btn" style="opacity:0.5; cursor:not-allowed;" title="Max 5 reminders reached">Generate New (Limit Reached)</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ✅ Customer Info -->
+  <div class="grid" style="margin-top:14px;">
+    <div class="mini-card">
+      <h3>{{ t.customer_name }}</h3>
+      <p>Customer</p>
+    </div>
+  </div>
+
+  {% if reminders|length == 0 %}
+    <p class="muted" style="margin-top:14px;">No reminders saved yet.</p>
+  {% endif %}
+
+  <p id="copyStatus" class="muted" style="margin:14px 0 0 0; display:none;">
+    ✅ Reminder copied
+  </p>
+
+  {% for r in reminders %}
+    <div class="history-box">
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+
+        <p class="muted" style="margin:0;">
+          <b>Tone:</b> {{ r.tone }}
+          &nbsp; | &nbsp; <b>Date:</b> {{ r.created_at }}
+
+          {% if r.suggested_deadline %}
+            &nbsp; | &nbsp; <b>Deadline:</b> {{ r.suggested_deadline }}
+          {% endif %}
+
+          {% if r.coupon_code %}
+            &nbsp; | &nbsp; <b>Coupon:</b> {{ r.coupon_code }}
+          {% endif %}
+        </p>
+
+        <button type="button" class="btn" onclick="copyText('msg{{ r.id }}')">
+          Copy
+        </button>
+
+      </div>
+
+      <pre id="msg{{ r.id }}">{{ r.message }}</pre>
+
+    </div>
+  {% endfor %}
+
+</div>
+
+<script>
+function copyText(id){
+  const el = document.getElementById(id);
+  const status = document.getElementById("copyStatus");
+
+  if(!el) return;
+
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    if(status){
+      status.style.display = "block";
+      setTimeout(() => status.style.display = "none", 1500);
+    }
+  });
+}
+</script>
+{% endblock %}

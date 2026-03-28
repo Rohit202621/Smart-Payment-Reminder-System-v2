@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <h2>Update Profile</h2>
+    <p class="muted">Update your profile information below.</p>
+
+    <form method="POST" autocomplete="off">
+
+      <label>Store / Company Name</label>
+      <input type="text" name="store_name" required
+             value="{{ u.store_name or '' }}" placeholder="Your store name">
+
+      <label>Email</label>
+      <input type="email" name="email" required
+             value="{{ u.email or '' }}" placeholder="Your email">
+
+      <label>Phone</label>
+      <input type="tel" name="phone" required maxlength="10"
+             value="{{ u.phone or '' }}" placeholder="10-digit phone" inputmode="numeric">
+
+      <label>UPI ID <span style="color:#818cf8; font-size:12px;">(for QR code on invoices)</span></label>
+      <input type="text" name="upi_id"
+             value="{{ u.upi_id or '' }}"
+             placeholder="Eg: yourname@upi or 9876543210@paytm">
+      <p class="muted" style="margin-top:-8px; margin-bottom:12px; font-size:12px;">
+        This UPI ID appears as a QR code on every invoice so customers can pay directly.
+      </p>
+
+      <button type="submit">Save Changes</button>
+    </form>
+
+    <div class="auth-footer" style="margin-top:18px;">
+      <a href="{{ url_for('profile') }}">← Back to Profile</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Add Customer{% endblock %}
+
+{% block content %}
+<div class="card">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Add Customer</h2>
+      <p class="muted" style="margin:8px 0 0 0;">Create a customer record for payment tracking and reminders.</p>
+    </div>
+    <a class="btn" href="{{ url_for('customers') }}">← Back</a>
+  </div>
+
+  <form method="POST" autocomplete="off" style="margin-top:16px;">
+
+    <label>Customer Name <span style="color:#ef4444;">*</span></label>
+    <input type="text" name="name" required maxlength="60" placeholder="Eg: Rohit Ranjan Giri">
+
+    <label style="margin-top:14px;">Phone</label>
+    <input type="tel" name="phone" maxlength="10" placeholder="Eg: 9876543210" inputmode="numeric">
+    <p class="muted" style="margin-top:-8px; margin-bottom:12px; font-size:12px;">
+      Tip: Use 10-digit number (India) for WhatsApp reminders.
+    </p>
+
+    <label style="margin-top:4px;">Email</label>
+    <input type="email" name="email" maxlength="80" placeholder="Eg: customer@gmail.com">
+
+    <label style="margin-top:14px;">Address</label>
+    <input type="text" name="address" maxlength="200" placeholder="Eg: 123 Main Street, Bhubaneswar">
+
+    <label style="margin-top:14px;">PIN Code</label>
+    <input type="text" name="pin" maxlength="6" inputmode="numeric" placeholder="Eg: 751001">
+
+    <button type="submit" style="margin-top:20px;">Save Customer</button>
+  </form>
+
+</div>
+{% endblock %}

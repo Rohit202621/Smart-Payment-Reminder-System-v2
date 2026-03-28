@@ -1,0 +1,11 @@
+flask
+flask-login
+werkzeug
+python-dotenv
+authlib
+apscheduler
+reportlab
+qrcode[pil]
+pillow
+requests
+google-genai

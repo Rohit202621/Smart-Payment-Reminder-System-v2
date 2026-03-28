@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Reminder{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Smart Reminder Generator</h2>
+      <p class="muted" style="margin:8px 0 0 0;">AI Model: <b>{{ gemini_status }}</b></p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn" href="{{ url_for('transactions') }}">← Back</a>
+      <a class="btn" href="{{ url_for('reminder_history', tid=t.id) }}">History</a>
+    </div>
+  </div>
+
+  {% if email_sent %}
+  <div class="alert alert-success" style="margin-top:14px;">
+    ✅ Reminder email with PDF invoice successfully sent to <b>{{ t.customer_email }}</b>.
+  </div>
+  {% elif email_error %}
+  <div class="alert alert-danger" style="margin-top:14px;">
+    ⚠️ Could not send email to <b>{{ t.customer_email }}</b>. Please check SMTP settings. ({{ email_error }})
+  </div>
+  {% elif not t.customer_email %}
+  <div class="alert alert-danger" style="margin-top:14px;">
+    ⚠️ No email address found for this customer. Add an email to send reminders.
+  </div>
+  {% endif %}
+
+  <div class="grid" style="margin-top:14px;">
+    <div class="mini-card">
+      <h3>{{ t.customer_name }}</h3>
+      <p>Customer</p>
+    </div>
+    <div class="mini-card">
+      <h3>₹{{ t.pending_amount }}</h3>
+      <p>Pending Amount</p>
+    </div>
+    <div class="mini-card">
+      <h3>{{ tone }}</h3>
+      <p>Tone</p>
+    </div>
+    <div class="mini-card">
+      <h3>{{ count }}/5</h3>
+      <p>Reminder Limit</p>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;">
+    <p class="muted" style="margin:0;">
+      <b>Suggested Deadline:</b> {{ deadline }}
+      {% if coupon %} &nbsp;|&nbsp; <b>Coupon:</b> {{ coupon }}{% endif %}
+    </p>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+    <a class="btn whatsapp" href="{{ url_for('whatsapp_reminder', tid=t.id) }}" target="_blank">
+      📱 Send WhatsApp (Manual)
+    </a>
+    <a class="btn" href="{{ url_for('download_invoice', tid=t.id) }}" target="_blank">
+      📄 Download Invoice PDF
+    </a>
+  </div>
+
+  <form method="POST" action="{{ url_for('save_reminder', tid=t.id) }}" style="margin-top:16px;">
+    <input type="hidden" name="tone" value="{{ tone }}">
+    <input type="hidden" name="deadline" value="{{ deadline }}">
+    <input type="hidden" name="coupon" value="{{ coupon }}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+      <label style="margin:0;">Generated Message</label>
+      <button type="button" class="btn" onclick="copyReminder()">📋 Copy</button>
+    </div>
+    <p id="copyStatus" class="muted" style="margin:0 0 10px 0;display:none;">✅ Copied to clipboard</p>
+    <textarea id="reminderBox" name="message" rows="10" required autofocus>{{ msg }}</textarea>
+    <button type="submit">Save Reminder</button>
+  </form>
+</div>
+<script>
+function copyReminder(){
+  const box = document.getElementById("reminderBox");
+  const status = document.getElementById("copyStatus");
+  if(!box) return;
+  navigator.clipboard.writeText(box.value).then(() => {
+    if(status){ status.style.display="block"; setTimeout(()=>status.style.display="none",1500); }
+  });
+}
+</script>
+{% endblock %}

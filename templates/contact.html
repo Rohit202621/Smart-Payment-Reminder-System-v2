@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Need help{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <h2>Need help ?</h2>
+
+    <p class="muted">
+      Send your issue and our support team will contact you within 24 hours.
+    </p>
+
+    <div class="history-box" style="margin-top:16px;">
+
+      <p style="margin:0;"><b>Support Email:</b></p>
+      <p class="muted" style="margin:6px 0 0 0;">
+        {{ support_email }}
+      </p>
+
+      <p style="margin:14px 0 0 0;"><b>Your Registered Email:</b></p>
+      <p class="muted" style="margin:6px 0 0 0;">
+        {{ user_email or "Not Found" }}
+      </p>
+
+    </div>
+
+    {% if not user_email %}
+      <div class="alert alert-danger" style="margin-top:14px;">
+        ⚠️ Your registered email is missing. Please logout & login again or register again.
+      </div>
+
+      <button type="button" disabled style="opacity:0.6; cursor:not-allowed; margin-top:10px;">
+        Send Message
+      </button>
+
+    {% else %}
+      <form method="POST" style="margin-top:18px;" autocomplete="off">
+
+        <label>Subject</label>
+        <input
+          type="text"
+          name="subject"
+          required
+          maxlength="80"
+          placeholder="Eg: OTP issue / Login problem / Bug report"
+          aria-label="Support subject"
+        >
+
+        <label>Message</label>
+        <textarea
+          name="message"
+          required
+          rows="5"
+          maxlength="2000"
+          placeholder="Write your issue clearly..."
+          aria-label="Support message"
+        ></textarea>
+
+        <button type="submit">Send Message</button>
+      </form>
+    {% endif %}
+
+    <div class="auth-footer" style="margin-top:18px;">
+      <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

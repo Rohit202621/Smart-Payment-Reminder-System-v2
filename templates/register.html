@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <h2>Create account</h2>
+    <p class="muted">Register your business profile to use Smart Payment Reminder.</p>
+    <form method="POST" autocomplete="on">
+      <label>Store / Company Name</label>
+      <input type="text" name="store_name" required placeholder="Eg: Rohit Electronics" autocomplete="organization">
+
+      <label>Username</label>
+      <input type="text" name="username" required placeholder="Choose a username (min 3 chars)" autocomplete="username">
+
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="Enter your email" autocomplete="email">
+
+      <label>Phone</label>
+      <input type="tel" name="phone" required placeholder="10-digit phone number" autocomplete="tel" inputmode="numeric" pattern="[0-9]{10}" maxlength="10">
+
+      <label>UPI ID <span style="color:#818cf8; font-size:12px;">(for QR code on invoices)</span></label>
+      <input type="text" name="upi_id" placeholder="Eg: yourname@upi or 9876543210@paytm" autocomplete="off">
+    
+      <label>Password</label>
+      <div class="password-wrap">
+        <input id="regpass" type="password" name="password" required placeholder="Create a strong password" autocomplete="new-password">
+        <button type="button" class="eye-btn" onclick="toggleRegPassword()">
+          <svg id="eyeShowReg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12C4.5 7 8 4.5 12 4.5C16 4.5 19.5 7 22 12C19.5 17 16 19.5 12 19.5C8 19.5 4.5 17 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg id="eyeHideReg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" style="display:none;">
+            <path d="M3 3L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6.5 6.5C4.5 7.9 3 9.8 2 12C4.5 17 8 19.5 12 19.5C13.8 19.5 15.5 19 17 18.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9.5 4.7C10.3 4.57 11.14 4.5 12 4.5C16 4.5 19.5 7 22 12C21.3 13.5 20.4 14.8 19.4 15.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <button type="submit">Create Account</button>
+    </form>
+    <div class="auth-footer">
+      <span>Already have an account?</span>
+      <a href="{{ url_for('login') }}">Login</a>
+    </div>
+  </div>
+</div>
+<script>
+function toggleRegPassword(){
+  const input = document.getElementById("regpass");
+  const show = document.getElementById("eyeShowReg");
+  const hide = document.getElementById("eyeHideReg");
+  if(input.type==="password"){ input.type="text"; show.style.display="none"; hide.style.display="inline"; }
+  else { input.type="password"; show.style.display="inline"; hide.style.display="none"; }
+}
+</script>
+{% endblock %}

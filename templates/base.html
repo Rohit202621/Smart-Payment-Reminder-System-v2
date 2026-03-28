@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Smart Payment Reminder{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="navbar">
+    <a class="brand-link" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}">
+      <div class="brand">
+        <div class="logo">SP</div>
+        <div>
+          <div class="brand-title">Smart Payment</div>
+          <div class="brand-subtitle">Reminder System</div>
+        </div>
+      </div>
+    </a>
+    <div class="nav-links">
+      {% if current_user.is_authenticated %}
+        <a class="{% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="{% if request.path.startswith('/customers') %}active{% endif %}" href="{{ url_for('customers') }}">Customers</a>
+        <a class="{% if request.path.startswith('/transactions') %}active{% endif %}" href="{{ url_for('transactions') }}">Transactions</a>
+        <a class="{% if request.path.startswith('/help') %}active{% endif %}" href="{{ url_for('contact') }}">Help</a>
+        <a class="{% if request.path.startswith('/profile') %}active{% endif %}" href="{{ url_for('profile') }}">Profile</a>
+        <a class="{% if request.path.startswith('/audit-logs') %}active{% endif %}" href="{{ url_for('audit_logs') }}">Audit Logs</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a class="{% if request.path == url_for('login') %}active{% endif %}" href="{{ url_for('login') }}">Login</a>
+        <a class="{% if request.path == url_for('register') %}active{% endif %}" href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("form").forEach(form => {
+        form.addEventListener("submit", () => {
+          const btn = form.querySelector("button[type='submit']");
+          if (!btn) return;
+          btn.classList.add("btn-loading");
+          btn.disabled = true;
+          btn.innerText = "Please wait...";
+        });
+      });
+    });
+  </script>
+</body>
+</html>
