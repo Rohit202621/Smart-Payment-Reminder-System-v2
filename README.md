@@ -1,4 +1,4 @@
-# 🚀 Smart Payment Reminder System 
+# 🚀 Smart Payment Reminder System
 ## 📌 Overview
 
 Managing payments, dues, and invoices manually can lead to missed deadlines and financial loss.
@@ -56,6 +56,54 @@ Smart-Payment-Reminder-System-v2/
 │── README.md
 ```
 
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/Rohit202621/Smart-Payment-Reminder-System-v2.git
+cd Smart-Payment-Reminder-System-v2
+```
+
+### 2️⃣ Create virtual environment
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 3️⃣ Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Run the application
+
+```bash
+python app.py
+```
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in root directory:
+
+```env
+SECRET_KEY=your_secret_key
+EMAIL_USER=your_email
+EMAIL_PASS=your_password
+GOOGLE_CLIENT_ID=**********
+GOOGLE_CLIENT_SECRET=***************
+GEMINI_API_KEY=********************
+```
+
+⚠️ Never upload `.env` to GitHub
+
+---
 ## 🚀 Future Enhancements
 
 * 🤖 AI-powered reminder system (Gemini / Claude)
@@ -86,11 +134,9 @@ Basic manual testing can be done via:
 
 (You can add automated tests later)
 
-## 👨‍💻 Author
-
-**Rohit Ranjan Giri**
 ---
-
+## 👨‍💻 Author
+**Rohit Ranjan Giri**
 ## ⭐ Support
 
 If you like this project:
@@ -103,7 +149,7 @@ If you like this project:
 
 ## 📜 License
 
-This project is for educational and development purposes.
+This project is for educational purposes only .
 
 ---
 
